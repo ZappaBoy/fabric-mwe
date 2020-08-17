@@ -5,21 +5,10 @@
 ################
 
 set -e
-set -x
-
-# Dowload repository
-git clone https://github.com/aldredb/external-ca
-cd external-ca
-
-# Update images
-cp -R ../configs/* .
-
-# Update chaincode
-cp -R ../marbles02 chaincode/
 
 # Download Hyperledger Binaries (latest version)
 # Bash need sudo due to docker.socket
-curl -sSL http://bit.ly/2ysbOFE | sudo bash -s
+curl -sSL http://bit.ly/2ysbOFE | sudo bash -s -- 2.2.0 -d -s
 rm -f config/configtx.yaml config/core.yaml config/orderer.yaml
 
 # Generate crypto-materials for Orderer: create 'crypto-config' folder
@@ -104,7 +93,7 @@ fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.exa
 
 sleep 5 
 # Admin registers user Admin@org1.example.com, who is going to be the org1.example.com's admin, and peer peer0.org1.example.com
-fabric-ca-client register --caname ca --id.name Admin@org1.example.com --id.secret adminpw --id.type admin --id.affiliation org1 -u http://localhost:7054 # maybe password need to be the same: adminpw
+fabric-ca-client register --caname ca --id.name Admin@org1.example.com --id.secret adminpw --id.type admin --id.affiliation org1 -u http://localhost:7054
 fabric-ca-client register --caname ca --id.name peer0.org1.example.com --id.secret mysecret --id.type peer --id.affiliation org1 -u http://localhost:7054
 
 # Enroll Admin@org1.example.com
@@ -144,7 +133,7 @@ cp $PWD/nodeou.yaml $ORG_DIR/msp/config.yaml
 # Create Orderer Genesis Block and Channel Transaction
 export FABRIC_CFG_PATH=${PWD}
 export CHANNELID='external-ca-channel'
-configtxgen -profile OrdererGenesis -outputBlock ./config/genesis.block -channelID genesis-channel # -channelID ${CHANNELID} TODO: try with '-channelID genesis-channel' TODO: check https://stackoverflow.com/questions/54716671/failed-to-reach-implicit-threshold-of-1-sub-policies-required-1-remaining-perm
+configtxgen -profile OrdererGenesis -outputBlock ./config/genesis.block -channelID genesis-channel
 configtxgen -profile Channel -outputCreateChannelTx ./config/${CHANNELID}.tx -channelID ${CHANNELID}
 
 # Bring up Orderer, Peer and CLI
@@ -157,13 +146,12 @@ sudo docker exec cli peer channel join -b ${CHANNELID}.block
 
 # Install and instantiate chaincode
 # Install chaincode
-#sudo docker exec cli peer chaincode install -n asset_mgmt -v 1.0 -p github.com/sacc/ -v 1.0
 sudo docker exec cli peer chaincode install -n marbles -v 1.0 -l node -p /opt/gopath/src/github.com/marbles02/node -v 1.0
 
 # Instantiate
 sudo docker exec cli peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -l "node" -v 1.0 -c '{"Args":["init"]}' -P "OR('Org1MSP.member')"
 
-sleep 3
+sleep 5
 # Attempt to invoke and query chaincode
 # Invoke
 sudo docker exec cli peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -c '{"Args":["initMarble","marble2","red","50","tom"]}' --waitForEvent

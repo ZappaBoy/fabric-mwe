@@ -15,10 +15,10 @@ Ensure that `docker` and `docker-compose` are installed.
 
 ### HF Binaries
 
-Download binaries for Hyperledger Fabric v1.4.6
+Download binaries for Hyperledger Fabric v2.2
 
 ```bash
-curl -sSL http://bit.ly/2ysbOFE | bash -s -- 1.4.6 -d -s
+curl -sSL http://bit.ly/2ysbOFE | bash -s -- 2.2.0 -d -s
 rm -f config/configtx.yaml config/core.yaml config/orderer.yaml
 ```
 
@@ -27,8 +27,8 @@ rm -f config/configtx.yaml config/core.yaml config/orderer.yaml
 Clone the repository which contains all the scripts and files needed for this demo. All commands are to be executed in the root folder of the repository.
 
 ```bash
-git clone https://github.com/aldredb/external-ca
-cd external-ca
+git clone https://github.com/ZappaBoy/fabric-mwe.git
+cd fabric-mwe
 ```
 
 Generate crypto-materials for **Orderer**
@@ -146,7 +146,7 @@ fabric-ca-client enroll --caname ca --csr.names C=SG,ST=Singapore,L=Singapore,O=
 **admin** registers user **Admin@org1.example.com**, who is going to be the **org1.example.com**'s admin, and peer **peer0.org1.example.com**
 
 ```bash
-fabric-ca-client register --caname ca --id.name Admin@org1.example.com --id.secret mysecret --id.type admin --id.affiliation org1 -u http://localhost:7054
+fabric-ca-client register --caname ca --id.name Admin@org1.example.com --id.secret adminpw --id.type admin --id.affiliation org1 -u http://localhost:7054
 fabric-ca-client register --caname ca --id.name peer0.org1.example.com --id.secret mysecret --id.type peer --id.affiliation org1 -u http://localhost:7054
 ```
 
@@ -154,7 +154,7 @@ Enroll **Admin@org1.example.com**
 
 ```bash
 export FABRIC_CA_CLIENT_HOME=$ADMIN_DIR
-fabric-ca-client enroll --caname ca --csr.names C=SG,ST=Singapore,L=Singapore,O=org1.example.com -m Admin@org1.example.com -u http://Admin@org1.example.com:mysecret@localhost:7054
+fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m Admin@org1.example.com -u http://Admin@org1.example.com:mysecret@localhost:7054
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $ADMIN_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $ADMIN_DIR/msp/config.yaml
 ```
@@ -163,7 +163,7 @@ Enroll **peer0.org1.example.com**
 
 ```bash
 export FABRIC_CA_CLIENT_HOME=$PEER_DIR
-fabric-ca-client enroll --caname ca --csr.names C=SG,ST=Singapore,L=Singapore,O=org1.example.com -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
+fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $PEER_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $PEER_DIR/msp/config.yaml
 ```
@@ -172,7 +172,7 @@ Generate TLS certificate and key pair for **peer0.org1.example.com** to establis
 
 ```bash
 export FABRIC_CA_CLIENT_HOME=$TLS_REGISTRAR_DIR
-fabric-ca-client enroll --caname tlsca --csr.names C=SG,ST=Singapore,L=Singapore,O=org1.example.com -m admin -u http://admin:adminpw@localhost:7054
+fabric-ca-client enroll --caname tlsca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m admin -u http://admin:adminpw@localhost:7054
 
 fabric-ca-client register --caname tlsca --id.name peer0.org1.example.com --id.secret mysecret --id.type peer --id.affiliation org1 -u http://localhost:7054
 
@@ -209,7 +209,7 @@ Create Orderer Genesis Block and Channel Transaction
 
 ```bash
 export FABRIC_CFG_PATH=${PWD}
-configtxgen -profile OrdererGenesis -outputBlock ./config/genesis.block -channelID testchainid
+configtxgen -profile OrdererGenesis -outputBlock ./config/genesis.block -channelID genesis-channel
 configtxgen -profile Channel -outputCreateChannelTx ./config/channel1.tx -channelID channel1
 ```
 
@@ -219,25 +219,25 @@ Bring up **Orderer**, **Peer** and **CLI**
 docker-compose up -d orderer.example.com peer0.org1.example.com cli
 ```
 
-Create **channel1** and join **peer0.org1.example.com** to **channel1**. Note that the default user to perform all the operations from here onwards is **Admin@org1.example.com**, as specified in `CORE_PEER_MSPCONFIGPATH` environment variable in cli container.
+Create **${CHANNELID}** and join **peer0.org1.example.com** to **${CHANNELID}**. Note that the default user to perform all the operations from here onwards is **Admin@org1.example.com**, as specified in `CORE_PEER_MSPCONFIGPATH` environment variable in cli container.
 
 ```bash
-docker exec cli peer channel create -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -c channel1 -f /config/channel1.tx
-docker exec cli peer channel join -b channel1.block
+docker exec cli peer channel create -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -c ${CHANNELID} -f /config/${CHANNELID}.tx
+docker exec cli peer channel join -b ${CHANNELID}.block
 ```
 
 Install and instantiate chaincode
 
 ```bash
-docker exec cli peer chaincode install -n chaincode1 -p github.com/chaincode1 -v 1
-docker exec cli peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C channel1 -n chaincode1 -l "golang" -v 1 -c '{"Args":["init","a","81","b","11"]}' -P "OR('Org1MSP.member')"
+docker exec cli peer chaincode install -n marbles -v 1.0 -l node -p /opt/gopath/src/github.com/marbles02/node -v 1.0
+docker exec cli peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -l "node" -v 1.0 -c '{"Args":["init"]}' -P "OR('Org1MSP.member')"
 ```
 
 Attempt to invoke and query chaincode
 
 ```bash
-docker exec cli peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C channel1 -n chaincode1 -c '{"Args":["put", "z", "7"]}' --waitForEvent
-docker exec cli peer chaincode query -C channel1 -n chaincode1 -c '{"Args":["query","a"]}'
+docker exec cli peer chaincode install -n marbles -v 1.0 -l node -p /opt/gopath/src/github.com/marbles02/node -v 1.0
+docker exec cli peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -l "node" -v 1.0 -c '{"Args":["init"]}' -P "OR('Org1MSP.member')"
 ```
 
 If querying chaincode succeeds, we have successfully used the certificates to interact with the Hyperledger Fabric network
@@ -251,3 +251,5 @@ Refer to [IBP.md](IBP.md)
 ```bash
 ./destroy.sh
 ```
+
+Updated by ZappaBoy on 17/08/2020
