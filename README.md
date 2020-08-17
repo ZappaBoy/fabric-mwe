@@ -12,12 +12,16 @@ Updated by **ZappaBoy** on 17/08/2020. Please star the native repository and say
 
 Ensure that `docker` and `docker-compose` are installed.
 
+### Openssl 1.1.1d or latest
+
+Oldest versions may be creates problems
+
 ### HF Binaries
 
 Download binaries for Hyperledger Fabric v2.2
 
 ```bash
-curl -sSL http://bit.ly/2ysbOFE | bash -s -- 2.2.0 -d -s
+curl -sSL http://bit.ly/2ysbOFE | bash -s
 rm -f config/configtx.yaml config/core.yaml config/orderer.yaml
 ```
 
@@ -29,6 +33,10 @@ Clone the repository which contains all the scripts and files needed for this de
 git clone https://github.com/ZappaBoy/fabric-mwe.git
 cd fabric-mwe
 ```
+
+***Pay attention: 
+The following tutorial is for illustrative purposes may not be up to date and may not be sufficient to bring up the network, we recommend that you follow the script: `./start,sh`
+***
 
 Generate crypto-materials for **Orderer**
 
