@@ -29,7 +29,7 @@ echo 1000 > identity-rca/serial
 echo 1000 > identity-rca/crlnumber
 
 # Fix openssl config
-OPENSSL_CONFIG=$(-config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/"))
+OPENSSL_CONFIG=$(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
 # Generate the Identity Root CA's
 openssl ecparam -name prime256v1 -genkey -noout -out identity-rca/private/rca.identity.org1.example.com.key -config ${OPENSSL_CONFIG}
 
