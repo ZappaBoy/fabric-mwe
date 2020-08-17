@@ -31,7 +31,7 @@ Clone the repository which contains all the scripts and files needed for this de
 
 ```bash
 git clone https://github.com/ZappaBoy/fabric-mwe.git
-cd fabric-mwe
+cd fabric-mwe/external-ca/
 ```
 
 ### Pay attention 
