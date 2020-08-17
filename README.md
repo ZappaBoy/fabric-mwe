@@ -1,8 +1,7 @@
 <!-- markdownlint-disable MD033 -->
 ## This is a private fork of https://github.com/aldredb/external-ca
-The original fork not work with the newer update of Hyperledger Fabric, this repository is now updated to Fabric v2.2 (Fabric-CA still 1.4)
-Updated by ZappaBoy on 17/08/2020 
-Please star the native repository and say thanks to 'aldredb'
+The original fork not work with the newer update of Hyperledger Fabric, this repository is now updated to Fabric v2.2 (Fabric-CA still 1.4).
+Updated by **ZappaBoy** on 17/08/2020. Please star the native repository and say thanks to **aldredb**
 
 # Using OpenSSL CA as Root CA in Hyperledger Fabric
 <img src="img/hf-scenario.png" width="500" />
