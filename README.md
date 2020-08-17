@@ -34,10 +34,10 @@ git clone https://github.com/ZappaBoy/fabric-mwe.git
 cd fabric-mwe
 ```
 
-**Pay attention: 
-the following tutorial is for illustrative purposes may not be up to date and may not be sufficient to bring up the network, we recommend that you follow the script: `./start,sh`**
+### Pay attention 
+***The following tutorial is for illustrative purposes may not be up to date and may not be sufficient to bring up the network, we recommend that you follow the script: `./start,sh`**
 
-Generate crypto-materials for **Orderer**
+### Generate crypto-materials for **Orderer**
 
 ```bash
 export PATH=$PWD/bin:$PATH
