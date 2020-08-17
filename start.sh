@@ -139,7 +139,7 @@ configtxgen -profile Channel -outputCreateChannelTx ./config/${CHANNELID}.tx -ch
 docker-compose up -d orderer.example.com peer0.org1.example.com cli
 sleep 5
 
-# Create ${CHANNELID} and join peer0.org1.example.com to ${CHANNELID}. 
+# Create channel and join peer0.org1.example.com to channel. 
 # Note that the default user to perform all the operations from here onwards is Admin@org1.example.com, as specified in CORE_PEER_MSPCONFIGPATH environment variable in cli container.
 docker exec cli peer channel create -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -c ${CHANNELID} -f /config/${CHANNELID}.tx
 sleep 5
