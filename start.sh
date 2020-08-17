@@ -87,34 +87,43 @@ curl http://localhost:7054/cainfo\?ca\=tlsca
 # Enroll the ca registrar user, admin. The registrar user has the privilege to register other users. 
 # Notice the parameter --caname ca, which signifies interaction with the ca instance of the CA containers instead of tlsca
 echo 'Waiting that Intermediate CA is ready'
-sleep 70
+sleep 80
 export FABRIC_CA_CLIENT_HOME=$IDENTITY_REGISTRAR_DIR
 fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m admin -u http://admin:adminpw@localhost:7054
-
 sleep 5 
+
 # Admin registers user Admin@org1.example.com, who is going to be the org1.example.com's admin, and peer peer0.org1.example.com
 fabric-ca-client register --caname ca --id.name Admin@org1.example.com --id.secret adminpw --id.type admin --id.affiliation org1 -u http://localhost:7054 # maybe password need to be the same: adminpw
 fabric-ca-client register --caname ca --id.name peer0.org1.example.com --id.secret mysecret --id.type peer --id.affiliation org1 -u http://localhost:7054
+sleep 3
 
 # Enroll Admin@org1.example.com
 export FABRIC_CA_CLIENT_HOME=$ADMIN_DIR
 fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m Admin@org1.example.com -u http://Admin@org1.example.com:adminpw@localhost:7054
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $ADMIN_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $ADMIN_DIR/msp/config.yaml
+sleep 3
 
 # Enroll peer0.org1.example.com
 export FABRIC_CA_CLIENT_HOME=$PEER_DIR
 fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $PEER_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $PEER_DIR/msp/config.yaml
+sleep 3
 
 # Generate TLS certificate and key pair for peer0.org1.example.com to establish TLS sessions with other components. 
 # There is no need to generate TLS certificate and key pair for Admin@org1.example.com as a user does not use any TLS communication. Notice that the parameter --caname is set to tlsca
 export FABRIC_CA_CLIENT_HOME=$TLS_REGISTRAR_DIR
 fabric-ca-client enroll --caname tlsca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m admin -u http://admin:adminpw@localhost:7054
+sleep 3
+
 fabric-ca-client register --caname tlsca --id.name peer0.org1.example.com --id.secret mysecret --id.type peer --id.affiliation org1 -u http://localhost:7054
+sleep 3
+
 export FABRIC_CA_CLIENT_HOME=$PEER_DIR/tls
 fabric-ca-client enroll --caname tlsca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
+sleep 3 
+
 cp $PEER_DIR/tls/msp/signcerts/*.pem $PEER_DIR/tls/server.crt
 cp $PEER_DIR/tls/msp/keystore/* $PEER_DIR/tls/server.key
 cat $PEER_DIR/tls/msp/intermediatecerts/*.pem $PEER_DIR/tls/msp/cacerts/*.pem > $PEER_DIR/tls/ca.crt
