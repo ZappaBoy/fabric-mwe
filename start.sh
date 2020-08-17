@@ -133,6 +133,7 @@ cp $PWD/nodeou.yaml $ORG_DIR/msp/config.yaml
 # Create Orderer Genesis Block and Channel Transaction
 export FABRIC_CFG_PATH=${PWD}
 export CHANNELID='external-ca-channel'
+sudo chown $USER -R .
 configtxgen -profile OrdererGenesis -outputBlock ./config/genesis.block -channelID genesis-channel # -channelID ${CHANNELID} TODO: try with '-channelID genesis-channel' TODO: check https://stackoverflow.com/questions/54716671/failed-to-reach-implicit-threshold-of-1-sub-policies-required-1-remaining-perm
 configtxgen -profile Channel -outputCreateChannelTx ./config/${CHANNELID}.tx -channelID ${CHANNELID}
 
