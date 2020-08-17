@@ -74,7 +74,7 @@ cat $ORG_DIR/tlsca/ica.tls.org1.example.com.cert $PWD/tls-rca/certs/rca.tls.org1
 sudo docker-compose up -d ica.org1.example.com
 
 # Wait that the container is up                                                                                                                                                                                     
-echo 'Waiting that constainer is up'
+echo 'Waiting that container is up'
 sleep 15
 
 # Once the container is up and running, confirm that there are ca and tlsca instances running in the container
@@ -93,7 +93,7 @@ fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.exa
 
 sleep 5 
 # Admin registers user Admin@org1.example.com, who is going to be the org1.example.com's admin, and peer peer0.org1.example.com
-fabric-ca-client register --caname ca --id.name Admin@org1.example.com --id.secret adminpw --id.type admin --id.affiliation org1 -u http://localhost:7054 # maybe password need to be the same: adminpw
+fabric-ca-client register --caname ca --id.name Admin@org1.example.com --id.secret adminpw --id.type admin --id.affiliation org1 -u http://localhost:7054 
 fabric-ca-client register --caname ca --id.name peer0.org1.example.com --id.secret mysecret --id.type peer --id.affiliation org1 -u http://localhost:7054
 
 # Enroll Admin@org1.example.com
@@ -126,7 +126,6 @@ cp $PEER_DIR/msp/cacerts/*.pem $ORG_DIR/msp/cacerts/
 cp $PEER_DIR/msp/intermediatecerts/*.pem $ORG_DIR/msp/intermediatecerts/
 cp $PWD/tls-rca/certs/rca.tls.org1.example.com.cert $ORG_DIR/msp/tlscacerts/
 cp $ORG_DIR/tlsca/ica.tls.org1.example.com.cert $ORG_DIR/msp/tlsintermediatecerts/
-
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $ORG_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $ORG_DIR/msp/config.yaml
 
@@ -140,20 +139,19 @@ configtxgen -profile Channel -outputCreateChannelTx ./config/${CHANNELID}.tx -ch
 # Bring up Orderer, Peer and CLI
 sudo docker-compose up -d orderer.example.com peer0.org1.example.com cli
 
-# Create ${CHANNELID} and join peer0.org1.example.com to ${CHANNELID}. 
+# Create channel and join peer0.org1.example.com to channel. 
 # Note that the default user to perform all the operations from here onwards is Admin@org1.example.com, as specified in CORE_PEER_MSPCONFIGPATH environment variable in cli container.
 sudo docker exec cli peer channel create -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -c ${CHANNELID} -f /config/${CHANNELID}.tx
 sudo docker exec cli peer channel join -b ${CHANNELID}.block
 
 # Install and instantiate chaincode
 # Install chaincode
-#sudo docker exec cli peer chaincode install -n asset_mgmt -v 1.0 -p github.com/sacc/ -v 1.0
 sudo docker exec cli peer chaincode install -n marbles -v 1.0 -l node -p /opt/gopath/src/github.com/marbles02/node -v 1.0
 
 # Instantiate
 sudo docker exec cli peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -l "node" -v 1.0 -c '{"Args":["init"]}' -P "OR('Org1MSP.member')"
-
 sleep 3
+
 # Attempt to invoke and query chaincode
 # Invoke
 sudo docker exec cli peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -c '{"Args":["initMarble","marble2","red","50","tom"]}' --waitForEvent
