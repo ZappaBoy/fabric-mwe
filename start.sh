@@ -36,7 +36,7 @@ openssl ecparam -name prime256v1 -genkey -noout -out identity-rca/private/rca.id
 # Based on the private key, generate a Certificate Signing Request (CSR) and self-sign the CSR
 # In case the following command generate an error add this (https://github.com/openssl/openssl/issues/7754#issuecomment-601176195): 
 # -config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
-openssl req -config openssl_root-identity.cnf -new -x509 -sha256 -extensions v3_ca -key identity-rca/private/rca.identity.org1.example.com.key -out identity-rca/certs/rca.identity.org1.example.com.cert -days 3650 -subj "/C=IT/ST=Italy/L=Italy/O=org1.example.com/OU=Example/CN=rca.identity.org1.example.com" -config ${OPENSSL_CONFIG}
+openssl req -config openssl_root-identity.cnf -new -x509 -sha256 -extensions v3_ca -key identity-rca/private/rca.identity.org1.example.com.key -out identity-rca/certs/rca.identity.org1.example.com.cert -days 3650 -subj "/C=IT/ST=Italy/L=Italy/O=org1.example.com/OU=Example/CN=rca.identity.org1.example.com"
 
 # Create the TLS Root CA folder structure
 mkdir -p tls-rca/private tls-rca/certs tls-rca/newcerts tls-rca/crl
@@ -46,7 +46,7 @@ echo 1000 > tls-rca/crlnumber
 
 # Based on the private key, generate a Certificate Signing Request (CSR) and self-sign the CSR
 openssl ecparam -name prime256v1 -genkey -noout -out tls-rca/private/rca.tls.org1.example.com.key
-openssl req -config openssl_root-tls.cnf -new -x509 -sha256 -extensions v3_ca -key tls-rca/private/rca.tls.org1.example.com.key -out tls-rca/certs/rca.tls.org1.example.com.cert -days 3650 -subj "/C=IT/ST=Italy/L=Italy/O=org1.example.com/OU=Example/CN=rca.tls.org1.example.com" -config ${OPENSSL_CONFIG}
+openssl req -config openssl_root-tls.cnf -new -x509 -sha256 -extensions v3_ca -key tls-rca/private/rca.tls.org1.example.com.key -out tls-rca/certs/rca.tls.org1.example.com.cert -days 3650 -subj "/C=IT/ST=Italy/L=Italy/O=org1.example.com/OU=Example/CN=rca.tls.org1.example.com"
 
 # (Intermediate CA) Create Intermediate Certificate Authorities
 # Generate private key and CSR for Identity Intermediate CA. Note that the value of Organization (O) i.e. org1.example.com is the same as that of the Identity Root CA
