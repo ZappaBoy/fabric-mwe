@@ -96,6 +96,7 @@ fabric-ca-client register --caname ca --id.name Admin@org1.example.com --id.secr
 fabric-ca-client register --caname ca --id.name peer0.org1.example.com --id.secret mysecret --id.type peer --id.affiliation org1 -u http://localhost:7054
 
 # Enroll Admin@org1.example.com
+sleep 5
 export FABRIC_CA_CLIENT_HOME=$ADMIN_DIR
 fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m Admin@org1.example.com -u http://Admin@org1.example.com:adminpw@localhost:7054
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $ADMIN_DIR/msp/chain.cert
