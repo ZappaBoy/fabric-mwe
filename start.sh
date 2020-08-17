@@ -7,8 +7,7 @@
 set -e
 
 # Download Hyperledger Binaries (latest version)
-# Bash need sudo due to docker.socket
-curl -sSL http://bit.ly/2ysbOFE | sudo bash -s -- 2.2.0 -d -s
+curl -sSL http://bit.ly/2ysbOFE | bash -s -- 2.2.0 -d -s
 rm -f config/configtx.yaml config/core.yaml config/orderer.yaml
 
 # Generate crypto-materials for Orderer: create 'crypto-config' folder
@@ -71,7 +70,7 @@ cat $ORG_DIR/tlsca/ica.tls.org1.example.com.cert $PWD/tls-rca/certs/rca.tls.org1
 
 # Finally, start the Intermediate CA. The configuration file of Intermediate CA will point to the certificate, key and chain which we generated in the previous steps. 
 # Refer to ca-config/fabric-ca-server-config.yaml for the Identity CA instance and ca-config/tlsca/fabric-ca-server-config.yaml for the TLS CA instance
-sudo docker-compose up -d ica.org1.example.com
+docker-compose up -d ica.org1.example.com
 
 # Wait that the container is up                                                                                                                                                                                     
 echo 'Waiting that constainer is up'
@@ -137,26 +136,32 @@ configtxgen -profile OrdererGenesis -outputBlock ./config/genesis.block -channel
 configtxgen -profile Channel -outputCreateChannelTx ./config/${CHANNELID}.tx -channelID ${CHANNELID}
 
 # Bring up Orderer, Peer and CLI
-sudo docker-compose up -d orderer.example.com peer0.org1.example.com cli
+docker-compose up -d orderer.example.com peer0.org1.example.com cli
+sleep 5
 
 # Create ${CHANNELID} and join peer0.org1.example.com to ${CHANNELID}. 
 # Note that the default user to perform all the operations from here onwards is Admin@org1.example.com, as specified in CORE_PEER_MSPCONFIGPATH environment variable in cli container.
-sudo docker exec cli peer channel create -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -c ${CHANNELID} -f /config/${CHANNELID}.tx
-sudo docker exec cli peer channel join -b ${CHANNELID}.block
+docker exec cli peer channel create -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -c ${CHANNELID} -f /config/${CHANNELID}.tx
+sleep 5
+docker exec cli peer channel join -b ${CHANNELID}.block
+sleep 5
 
 # Install and instantiate chaincode
 # Install chaincode
-sudo docker exec cli peer chaincode install -n marbles -v 1.0 -l node -p /opt/gopath/src/github.com/marbles02/node -v 1.0
+docker exec cli peer chaincode install -n marbles -v 1.0 -l node -p /opt/gopath/src/github.com/marbles02/node -v 1.0
+sleep 5
 
 # Instantiate
-sudo docker exec cli peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -l "node" -v 1.0 -c '{"Args":["init"]}' -P "OR('Org1MSP.member')"
+docker exec cli peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -l "node" -v 1.0 -c '{"Args":["init"]}' -P "OR('Org1MSP.member')"
 
 sleep 5
 # Attempt to invoke and query chaincode
 # Invoke
-sudo docker exec cli peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -c '{"Args":["initMarble","marble2","red","50","tom"]}' --waitForEvent
+docker exec cli peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -c '{"Args":["initMarble","marble2","red","50","tom"]}' --waitForEvent
+
+sleep 5
 # Query
-sudo docker exec cli peer chaincode query -C ${CHANNELID} -n marbles -c '{"Args":["readMarble","marble2"]}'
+docker exec cli peer chaincode query -C ${CHANNELID} -n marbles -c '{"Args":["readMarble","marble2"]}'
 
 # If querying chaincode succeeds, we have successfully used the certificates to interact with the Hyperledger Fabric network
 
