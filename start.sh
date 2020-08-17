@@ -28,6 +28,9 @@ touch identity-rca/index.txt identity-rca/serial
 echo 1000 > identity-rca/serial
 echo 1000 > identity-rca/crlnumber
 
+# Generate .rnd
+openssl rand -out ~/.rnd -writerand ~/.rnd      
+
 # Generate the Identity Root CA's
 openssl ecparam -name prime256v1 -genkey -noout -out identity-rca/private/rca.identity.org1.example.com.key
 
@@ -73,7 +76,7 @@ cat $ORG_DIR/tlsca/ica.tls.org1.example.com.cert $PWD/tls-rca/certs/rca.tls.org1
 docker-compose up -d ica.org1.example.com
 
 # Wait that the container is up                                                                                                                                                                                     
-echo '\nWaiting that container is up'
+echo -e '\nWaiting that container is up'
 sleep 15
 
 # Once the container is up and running, confirm that there are ca and tlsca instances running in the container
