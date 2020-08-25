@@ -8,7 +8,7 @@ The original fork not work with the newer update of Hyperledger Fabric, this rep
 Updated by **ZappaBoy** on 17/08/2020. Please star the native repository and say thanks to **aldredb**.
 
 # Using OpenSSL CA as Root CA in Hyperledger Fabric
-<img src="img/hf-scenario.png" width="500" />
+<img src="external-ca/img/hf-scenario.png" width="500" />
 
 ## Prerequisites
 
@@ -196,11 +196,11 @@ rm -rf $PEER_DIR/tls/msp $PEER_DIR/tls/*.yaml
 
 At this point, we have successfully demonstrated that it is possible to combine 3rd party CAs and Fabric CA to form certificate chain of trust
 
-<img src="img/cert-chain.png" width="400" />
+<img src="external-ca/img/cert-chain.png" width="400" />
 
 ### Setting up the whole network
 
-<img src="img/network.png" width="500" />
+<img src="external-ca/img/network.png" width="500" />
 
 Prepare **org1.example.com**'s MSP folder.
 
