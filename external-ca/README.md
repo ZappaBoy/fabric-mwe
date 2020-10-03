@@ -26,7 +26,7 @@ cd fabric-mwe/external-ca/
 ```
 
 ### Pay attention 
-***The following tutorial is for illustrative purposes may not be up to date and may not be sufficient to bring up the network, we recommend that you follow the script: `./start,sh`**
+***The following tutorial is for illustrative purposes may not be up to date and may not be sufficient to bring up the network, we recommend that you follow the script: `./start.sh`**
 
 ### HF Binaries
 
