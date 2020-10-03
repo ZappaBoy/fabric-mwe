@@ -16,15 +16,6 @@ Ensure that `docker` and `docker-compose` are installed.
 
 Oldest versions may be creates problems
 
-### HF Binaries
-
-Download binaries for Hyperledger Fabric v2.2
-
-```bash
-curl -sSL http://bit.ly/2ysbOFE | bash -s
-rm -f config/configtx.yaml config/core.yaml config/orderer.yaml
-```
-
 ## Tutorial
 
 Clone the repository which contains all the scripts and files needed for this demo. All commands are to be executed in the root folder of the repository.
@@ -36,6 +27,15 @@ cd fabric-mwe/external-ca/
 
 ### Pay attention 
 ***The following tutorial is for illustrative purposes may not be up to date and may not be sufficient to bring up the network, we recommend that you follow the script: `./start,sh`**
+
+### HF Binaries
+
+Download binaries for Hyperledger Fabric v2.2
+
+```bash
+curl -sSL http://bit.ly/2ysbOFE | bash -s
+rm -f config/configtx.yaml config/core.yaml config/orderer.yaml
+```
 
 ### Generate crypto-materials for **Orderer**
 
