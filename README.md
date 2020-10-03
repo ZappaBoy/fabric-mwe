@@ -12,11 +12,11 @@ Updated by **ZappaBoy** on 17/08/2020. Please star the native repository and say
 
 ## Prerequisites
 
-### Docker + Docker-Compose
+### Docker + Docker Compose
 
 Ensure that `docker` and `docker-compose` are installed.
 
-### Openssl 1.1.1d or latest
+### Openssl 1.1.1d or later
 
 Oldest versions may be creates problems
 
