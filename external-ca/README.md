@@ -170,7 +170,7 @@ Enroll **Admin@org1.example.com**
 
 ```bash
 export FABRIC_CA_CLIENT_HOME=$ADMIN_DIR
-fabric-ca-client enroll --caname ca --csr.names "${CSR_NAMES}" -m Admin@org1.example.com -u http://Admin@org1.example.com:mysecret@localhost:7054
+fabric-ca-client enroll --caname ca --csr.names "${CSR_NAMES}" -m Admin@org1.example.com -u http://Admin@org1.example.com:adminpw@localhost:7054
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $ADMIN_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $ADMIN_DIR/msp/config.yaml
 ```
