@@ -48,7 +48,7 @@ echo 1000 > tls-rca/serial
 echo 1000 > tls-rca/crlnumber
 
 # Based on the private key, generate a Certificate Signing Request (CSR) and self-sign the CSR
-openssl ecparam -name prime256v1 -genkey -noout -out tls-rca/private/rca.tls.org1.example.com.ke
+openssl ecparam -name prime256v1 -genkey -noout -out tls-rca/private/rca.tls.org1.example.com.key
 openssl req -config openssl_root-tls.cnf -new -x509 -sha256 -extensions v3_ca -key tls-rca/private/rca.tls.org1.example.com.key -out tls-rca/certs/rca.tls.org1.example.com.cert -days 3650 -subj "${SUBJ}rca.tls.org1.example.com"
 # (Intermediate CA) Create Intermediate Certificate Authorities
 # Generate private key and CSR for Identity Intermediate CA. Note that the value of Organization (O) i.e. org1.example.com is the same as that of the Identity Root CA
