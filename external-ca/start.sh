@@ -6,6 +6,10 @@
 
 set -e
 
+SUBJ="/C=IT/ST=Italy/L=Italy/O=org1.example.com/OU=Example/CN="
+CSR_NAMES="C=IT,ST=Italy,L=Italy,O=org1.example.com"
+CHANNEL_NAME="external-ca-channel"
+
 # Download Hyperledger Binaries (latest version)
 # Bash need sudo due to docker.socket
 curl -sSL http://bit.ly/2ysbOFE | sudo bash -s
@@ -35,7 +39,7 @@ openssl ecparam -name prime256v1 -genkey -noout -out identity-rca/private/rca.id
 # Based on the private key, generate a Certificate Signing Request (CSR) and self-sign the CSR
 # In case the following command generate an error add this (https://github.com/openssl/openssl/issues/7754#issuecomment-601176195): 
 # -config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
-openssl req -config openssl_root-identity.cnf -new -x509 -sha256 -extensions v3_ca -key identity-rca/private/rca.identity.org1.example.com.key -out identity-rca/certs/rca.identity.org1.example.com.cert -days 3650 -subj "/C=IT/ST=Italy/L=Italy/O=org1.example.com/OU=Example/CN=rca.identity.org1.example.com" -config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
+openssl req -config openssl_root-identity.cnf -new -x509 -sha256 -extensions v3_ca -key identity-rca/private/rca.identity.org1.example.com.key -out identity-rca/certs/rca.identity.org1.example.com.cert -days 3650 -subj "${SUBJ}rca.identity.org1.example.com" -config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
 
 # Create the TLS Root CA folder structure
 mkdir -p tls-rca/private tls-rca/certs tls-rca/newcerts tls-rca/crl
@@ -44,15 +48,14 @@ echo 1000 > tls-rca/serial
 echo 1000 > tls-rca/crlnumber
 
 # Based on the private key, generate a Certificate Signing Request (CSR) and self-sign the CSR
-openssl ecparam -name prime256v1 -genkey -noout -out tls-rca/private/rca.tls.org1.example.com.key
-openssl req -config openssl_root-tls.cnf -new -x509 -sha256 -extensions v3_ca -key tls-rca/private/rca.tls.org1.example.com.key -out tls-rca/certs/rca.tls.org1.example.com.cert -days 3650 -subj "/C=IT/ST=Italy/L=Italy/O=org1.example.com/OU=Example/CN=rca.tls.org1.example.com"
-
+openssl ecparam -name prime256v1 -genkey -noout -out tls-rca/private/rca.tls.org1.example.com.ke
+openssl req -config openssl_root-tls.cnf -new -x509 -sha256 -extensions v3_ca -key tls-rca/private/rca.tls.org1.example.com.key -out tls-rca/certs/rca.tls.org1.example.com.cert -days 3650 -subj "${SUBJ}rca.tls.org1.example.com"
 # (Intermediate CA) Create Intermediate Certificate Authorities
 # Generate private key and CSR for Identity Intermediate CA. Note that the value of Organization (O) i.e. org1.example.com is the same as that of the Identity Root CA
 openssl ecparam -name prime256v1 -genkey -noout -out $ORG_DIR/ca/ica.identity.org1.example.com.key
 # In case the following command generate an error add this (https://github.com/openssl/openssl/issues/7754#issuecomment-601176195): 
 # -config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
-openssl req -new -sha256 -key $ORG_DIR/ca/ica.identity.org1.example.com.key -out $ORG_DIR/ca/ica.identity.org1.example.com.csr -subj "/C=IT/ST=Italy/L=Italy/O=org1.example.com/OU=Example/CN=ica.identity.org1.example.com" -config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
+openssl req -new -sha256 -key $ORG_DIR/ca/ica.identity.org1.example.com.key -out $ORG_DIR/ca/ica.identity.org1.example.com.csr -subj "${SUBJ}ica.identity.org1.example.com" -config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
 
 # The Identity Root CA signs the Identity Intermediate CA's CSR, issuing the certificate. The validity period is half that of the Root certificate. Note that we use v3_intermediate_ca extension. 
 openssl ca -batch -config openssl_root-identity.cnf -extensions v3_intermediate_ca -days 1825 -notext -md sha256 -in $ORG_DIR/ca/ica.identity.org1.example.com.csr -out $ORG_DIR/ca/ica.identity.org1.example.com.cert
@@ -65,7 +68,7 @@ cat $ORG_DIR/ca/ica.identity.org1.example.com.cert $PWD/identity-rca/certs/rca.i
 openssl ecparam -name prime256v1 -genkey -noout -out $ORG_DIR/tlsca/ica.tls.org1.example.com.key
 # In case the following command generate an error add this (https://github.com/openssl/openssl/issues/7754#issuecomment-601176195): 
 # -config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
-openssl req -new -sha256 -key $ORG_DIR/tlsca/ica.tls.org1.example.com.key -out $ORG_DIR/tlsca/ica.tls.org1.example.com.csr -subj "/C=IT/ST=Italy/L=Italy/O=org1.example.com/OU=Example/CN=ica.tls.org1.example.com" -config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
+openssl req -new -sha256 -key $ORG_DIR/tlsca/ica.tls.org1.example.com.key -out $ORG_DIR/tlsca/ica.tls.org1.example.com.csr -subj "${SUBJ}ica.tls.org1.example.com" -config <(cat /etc/ssl/openssl.cnf | sed "s/RANDFILE\s*=\s*\$ENV::HOME\/\.rnd/#/")
 openssl ca -batch -config openssl_root-tls.cnf -extensions v3_intermediate_ca -days 1825 -notext -md sha256 -in $ORG_DIR/tlsca/ica.tls.org1.example.com.csr -out $ORG_DIR/tlsca/ica.tls.org1.example.com.cert
 cat $ORG_DIR/tlsca/ica.tls.org1.example.com.cert $PWD/tls-rca/certs/rca.tls.org1.example.com.cert > $ORG_DIR/tlsca/chain.tls.org1.example.com.cert
 
@@ -89,7 +92,7 @@ curl http://localhost:7054/cainfo\?ca\=tlsca
 echo 'Waiting that Intermediate CA is ready'
 sleep 70
 export FABRIC_CA_CLIENT_HOME=$IDENTITY_REGISTRAR_DIR
-fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m admin -u http://admin:adminpw@localhost:7054
+fabric-ca-client enroll --caname ca --csr.names "${CSR_NAMES}" -m admin -u http://admin:adminpw@localhost:7054
 
 sleep 5 
 # Admin registers user Admin@org1.example.com, who is going to be the org1.example.com's admin, and peer peer0.org1.example.com
@@ -98,23 +101,23 @@ fabric-ca-client register --caname ca --id.name peer0.org1.example.com --id.secr
 
 # Enroll Admin@org1.example.com
 export FABRIC_CA_CLIENT_HOME=$ADMIN_DIR
-fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m Admin@org1.example.com -u http://Admin@org1.example.com:adminpw@localhost:7054
+fabric-ca-client enroll --caname ca --csr.names "${CSR_NAMES}" -m Admin@org1.example.com -u http://Admin@org1.example.com:adminpw@localhost:7054
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $ADMIN_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $ADMIN_DIR/msp/config.yaml
 
 # Enroll peer0.org1.example.com
 export FABRIC_CA_CLIENT_HOME=$PEER_DIR
-fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
+fabric-ca-client enroll --caname ca --csr.names "${CSR_NAMES}" -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $PEER_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $PEER_DIR/msp/config.yaml
 
 # Generate TLS certificate and key pair for peer0.org1.example.com to establish TLS sessions with other components. 
 # There is no need to generate TLS certificate and key pair for Admin@org1.example.com as a user does not use any TLS communication. Notice that the parameter --caname is set to tlsca
 export FABRIC_CA_CLIENT_HOME=$TLS_REGISTRAR_DIR
-fabric-ca-client enroll --caname tlsca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m admin -u http://admin:adminpw@localhost:7054
+fabric-ca-client enroll --caname tlsca --csr.names "${CSR_NAMES}" -m admin -u http://admin:adminpw@localhost:7054
 fabric-ca-client register --caname tlsca --id.name peer0.org1.example.com --id.secret mysecret --id.type peer --id.affiliation org1 -u http://localhost:7054
 export FABRIC_CA_CLIENT_HOME=$PEER_DIR/tls
-fabric-ca-client enroll --caname tlsca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
+fabric-ca-client enroll --caname tlsca --csr.names "${CSR_NAMES}" -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
 cp $PEER_DIR/tls/msp/signcerts/*.pem $PEER_DIR/tls/server.crt
 cp $PEER_DIR/tls/msp/keystore/* $PEER_DIR/tls/server.key
 cat $PEER_DIR/tls/msp/intermediatecerts/*.pem $PEER_DIR/tls/msp/cacerts/*.pem > $PEER_DIR/tls/ca.crt

@@ -16,6 +16,15 @@ Ensure that `docker` and `docker-compose` are installed.
 
 Oldest versions may be creates problems
 
+## Before start
+
+In the following tutorial there will be some information related to the country.
+Define `SUBJ` and `CSR_NAMES` variables based on your needs to avoid mistakes. 
+``` bash
+export SUBJ="/C=IT/ST=Italy/L=Italy/O=org1.example.com/OU=Example/CN="
+export CSR_NAMES="C=IT,ST=Italy,L=Italy,O=org1.example.com"
+```
+
 ## Tutorial
 
 Clone the repository which contains all the scripts and files needed for this demo. All commands are to be executed in the root folder of the repository.
@@ -75,7 +84,7 @@ openssl ecparam -name prime256v1 -genkey -noout -out identity-rca/private/rca.id
 Based on the private key, generate a Certificate Signing Request (CSR) and self-sign the CSR, producing the Identity Root certificate. Note that we use v3_ca extension. Root certificates are supposed to have long validity period, thus we set the period to 10 years.
 
 ```bash
-openssl req -config openssl_root-identity.cnf -new -x509 -sha256 -extensions v3_ca -key identity-rca/private/rca.identity.org1.example.com.key -out identity-rca/certs/rca.identity.org1.example.com.cert -days 3650 -subj "/C=SG/ST=Singapore/L=Singapore/O=org1.example.com/OU=/CN=rca.identity.org1.example.com"
+openssl req -config openssl_root-identity.cnf -new -x509 -sha256 -extensions v3_ca -key identity-rca/private/rca.identity.org1.example.com.key -out identity-rca/certs/rca.identity.org1.example.com.cert -days 3650 -subj "${SUBJ}rca.identity.org1.example.com"
 ```
 
 In a similar fashion, create the **TLS Root CA** folder structure and generate the certificate and key pairs
@@ -87,7 +96,7 @@ echo 1000 > tls-rca/serial
 echo 1000 > tls-rca/crlnumber
 
 openssl ecparam -name prime256v1 -genkey -noout -out tls-rca/private/rca.tls.org1.example.com.key
-openssl req -config openssl_root-tls.cnf -new -x509 -sha256 -extensions v3_ca -key tls-rca/private/rca.tls.org1.example.com.key -out tls-rca/certs/rca.tls.org1.example.com.cert -days 3650 -subj "/C=SG/ST=Singapore/L=Singapore/O=org1.example.com/OU=/CN=rca.tls.org1.example.com"
+openssl req -config openssl_root-tls.cnf -new -x509 -sha256 -extensions v3_ca -key tls-rca/private/rca.tls.org1.example.com.key -out tls-rca/certs/rca.tls.org1.example.com.cert -days 3650 -subj "${SUBJ}rca.tls.org1.example.com"
 ```
 
 ### Create Intermediate Certificate Authorities
@@ -97,7 +106,7 @@ Generate private key and CSR for **Identity Intermediate CA**. Note that the val
 ```bash
 openssl ecparam -name prime256v1 -genkey -noout -out $ORG_DIR/ca/ica.identity.org1.example.com.key
 
-openssl req -new -sha256 -key $ORG_DIR/ca/ica.identity.org1.example.com.key -out $ORG_DIR/ca/ica.identity.org1.example.com.csr -subj "/C=SG/ST=Singapore/L=Singapore/O=org1.example.com/OU=/CN=ica.identity.org1.example.com"
+openssl req -new -sha256 -key $ORG_DIR/ca/ica.identity.org1.example.com.key -out $ORG_DIR/ca/ica.identity.org1.example.com.csr -subj "${SUBJ}ica.identity.org1.example.com"
 ```
 
 The Identity Root CA signs the Identity Intermediate CA's CSR, issuing the certificate. The validity period is half that of the Root certificate. Note that we use `v3_intermediate_ca` extension.
@@ -118,7 +127,7 @@ In a similar fashion, generate the certificate and key pairs for **Intermediate 
 ```bash
 openssl ecparam -name prime256v1 -genkey -noout -out $ORG_DIR/tlsca/ica.tls.org1.example.com.key
 
-openssl req -new -sha256 -key $ORG_DIR/tlsca/ica.tls.org1.example.com.key -out $ORG_DIR/tlsca/ica.tls.org1.example.com.csr -subj "/C=SG/ST=Singapore/L=Singapore/O=org1.example.com/OU=/CN=ica.tls.org1.example.com"
+openssl req -new -sha256 -key $ORG_DIR/tlsca/ica.tls.org1.example.com.key -out $ORG_DIR/tlsca/ica.tls.org1.example.com.csr -subj "${SUBJ}ica.tls.org1.example.com"
 
 openssl ca -batch -config openssl_root-tls.cnf -extensions v3_intermediate_ca -days 1825 -notext -md sha256 -in $ORG_DIR/tlsca/ica.tls.org1.example.com.csr -out $ORG_DIR/tlsca/ica.tls.org1.example.com.cert
 
@@ -146,12 +155,13 @@ Enroll the `ca` registrar user, **admin**. The registrar user has the privilege 
 
 ```bash
 export FABRIC_CA_CLIENT_HOME=$IDENTITY_REGISTRAR_DIR
-fabric-ca-client enroll --caname ca --csr.names C=SG,ST=Singapore,L=Singapore,O=org1.example.com -m admin -u http://admin:adminpw@localhost:7054
+fabric-ca-client enroll --caname ca --csr.names "${CSR_NAMES}" -m admin -u http://admin:adminpw@localhost:7054
 ```
 
 **admin** registers user **Admin@org1.example.com**, who is going to be the **org1.example.com**'s admin, and peer **peer0.org1.example.com**
 
 ```bash
+
 fabric-ca-client register --caname ca --id.name Admin@org1.example.com --id.secret adminpw --id.type admin --id.affiliation org1 -u http://localhost:7054
 fabric-ca-client register --caname ca --id.name peer0.org1.example.com --id.secret mysecret --id.type peer --id.affiliation org1 -u http://localhost:7054
 ```
@@ -160,7 +170,7 @@ Enroll **Admin@org1.example.com**
 
 ```bash
 export FABRIC_CA_CLIENT_HOME=$ADMIN_DIR
-fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m Admin@org1.example.com -u http://Admin@org1.example.com:mysecret@localhost:7054
+fabric-ca-client enroll --caname ca --csr.names "${CSR_NAMES}" -m Admin@org1.example.com -u http://Admin@org1.example.com:mysecret@localhost:7054
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $ADMIN_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $ADMIN_DIR/msp/config.yaml
 ```
@@ -169,7 +179,7 @@ Enroll **peer0.org1.example.com**
 
 ```bash
 export FABRIC_CA_CLIENT_HOME=$PEER_DIR
-fabric-ca-client enroll --caname ca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
+fabric-ca-client enroll --caname ca --csr.names "${CSR_NAMES}" -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
 cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $PEER_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $PEER_DIR/msp/config.yaml
 ```
@@ -178,12 +188,12 @@ Generate TLS certificate and key pair for **peer0.org1.example.com** to establis
 
 ```bash
 export FABRIC_CA_CLIENT_HOME=$TLS_REGISTRAR_DIR
-fabric-ca-client enroll --caname tlsca --csr.names C=IT,ST=Italy,L=Italy,O=org1.example.com -m admin -u http://admin:adminpw@localhost:7054
+fabric-ca-client enroll --caname tlsca --csr.names "${CSR_NAMES}" -m admin -u http://admin:adminpw@localhost:7054
 
 fabric-ca-client register --caname tlsca --id.name peer0.org1.example.com --id.secret mysecret --id.type peer --id.affiliation org1 -u http://localhost:7054
 
 export FABRIC_CA_CLIENT_HOME=$PEER_DIR/tls
-fabric-ca-client enroll --caname tlsca --csr.names C=SG,ST=Singapore,L=Singapore,O=org1.example.com -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
+fabric-ca-client enroll --caname tlsca --csr.names "${CSR_NAMES}" -m peer0.org1.example.com -u http://peer0.org1.example.com:mysecret@localhost:7054
 cp $PEER_DIR/tls/msp/signcerts/*.pem $PEER_DIR/tls/server.crt
 cp $PEER_DIR/tls/msp/keystore/* $PEER_DIR/tls/server.key
 cat $PEER_DIR/tls/msp/intermediatecerts/*.pem $PEER_DIR/tls/msp/cacerts/*.pem > $PEER_DIR/tls/ca.crt
@@ -211,12 +221,18 @@ cp $ORG_DIR/ca/chain.identity.org1.example.com.cert $ORG_DIR/msp/chain.cert
 cp $PWD/nodeou.yaml $ORG_DIR/msp/config.yaml
 ```
 
+Set a channel ID
+
+``` bash
+export CHANNELID="MYCHANNELID"
+```
+
 Create Orderer Genesis Block and Channel Transaction
 
 ```bash
 export FABRIC_CFG_PATH=${PWD}
 configtxgen -profile OrdererGenesis -outputBlock ./config/genesis.block -channelID genesis-channel
-configtxgen -profile Channel -outputCreateChannelTx ./config/channel1.tx -channelID channel1
+configtxgen -profile Channel -outputCreateChannelTx ./config/${CHANNELID}.tx -channelID ${CHANNELID}
 ```
 
 Bring up **Orderer**, **Peer** and **CLI**
@@ -225,7 +241,7 @@ Bring up **Orderer**, **Peer** and **CLI**
 docker-compose up -d orderer.example.com peer0.org1.example.com cli
 ```
 
-Create **${CHANNELID}** and join **peer0.org1.example.com** to **${CHANNELID}**. Note that the default user to perform all the operations from here onwards is **Admin@org1.example.com**, as specified in `CORE_PEER_MSPCONFIGPATH` environment variable in cli container.
+Create the channel and join **peer0.org1.example.com**. Note that the default user to perform all the operations from here onwards is **Admin@org1.example.com**, as specified in `CORE_PEER_MSPCONFIGPATH` environment variable in cli container.
 
 ```bash
 docker exec cli peer channel create -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -c ${CHANNELID} -f /config/${CHANNELID}.tx
@@ -242,8 +258,8 @@ docker exec cli peer chaincode instantiate -o orderer.example.com:7050 --tls --c
 Attempt to invoke and query chaincode
 
 ```bash
-docker exec cli peer chaincode install -n marbles -v 1.0 -l node -p /opt/gopath/src/github.com/marbles02/node -v 1.0
-docker exec cli peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -l "node" -v 1.0 -c '{"Args":["init"]}' -P "OR('Org1MSP.member')"
+ docker exec cli peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /var/crypto/ordererOrganizations/example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C ${CHANNELID} -n marbles -c '{"Args":["initMarble","marble2","red","50","tom"]}' --waitForEvent
+ docker exec cli peer chaincode query -C ${CHANNELID} -n marbles -c '{"Args":["readMarble","marble2"]}'
 ```
 
 If querying chaincode succeeds, we have successfully used the certificates to interact with the Hyperledger Fabric network
